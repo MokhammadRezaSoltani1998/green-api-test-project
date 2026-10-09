@@ -1,41 +1,83 @@
+
 import { useState } from "react";
 import { checkWhatsapp, type GreenApiCredentials } from "../api/greenApi";
+
 interface PhoneFormProps {
   credentials: GreenApiCredentials;
-  onChatSubmit: (chatId: string) => void;
+  onChatSubmit: (chat: { chatId: string; phone: string }) => void;
 }
+
 const PhoneForm = ({ credentials, onChatSubmit }: PhoneFormProps) => {
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    const phone = phoneNumber.replace(/\D/g, "");
+
+    if (!/^[1-9]\d{6,14}$/.test(phone)) {
+      setError("Введите номер в международном формате");
+      return;
+    }
+
+    setError(null);
+    setIsLoading(true);
+
     try {
-      const formattedPhone = parseInt(phoneNumber.replace(/\D/g, ""), 10);
-      const response = await checkWhatsapp(credentials, formattedPhone);
-      if (response.existsWhatsapp && response.chatId) {
-        onChatSubmit(response.chatId);
+      const response = await checkWhatsapp(credentials, Number(phone));
+
+      if (!response.existsWhatsapp || !response.chatId) {
+        setError("Номер не найден в WhatsApp");
+        return;
       }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.log(error.message);
-      } else {
-        console.log("Произошла неизвестная ошибка:", error);
-      }
+
+      onChatSubmit({
+        chatId: response.chatId,
+        phone,
+      });
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Не удалось проверить номер",
+      );
+    } finally {
+      setIsLoading(false);
     }
   }
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>Phone Number</label>
-        <input
-          type="text"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          required
-        />
-      </div>
-      <button type="submit">Создать чат</button>
-    </form>
+    <div className="new-chat-card">
+      <h2>Новый чат</h2>
+
+      <form className="form-stack" onSubmit={handleSubmit}>
+        <div className="form-field">
+          <label htmlFor="phone">Номер телефона</label>
+          <input
+            id="phone"
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="79876543210"
+            required
+          />
+        </div>
+
+        {error && <p className="form-error" role="alert">{error}</p>}
+
+        <button
+          className="primary-button"
+          type="submit"
+          disabled={isLoading}
+        >
+          {isLoading ? "Проверка..." : "Создать чат"}
+        </button>
+      </form>
+    </div>
   );
 };
 
 export default PhoneForm;
+
