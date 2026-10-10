@@ -21,13 +21,43 @@ interface ChatMessage {
 }
 
 const Chat = ({ credentials, chatId, phone, onBack }: ChatProps) => {
+  const storageKey = `chat-history:${credentials.idInstance}:${chatId}`;
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+
+      if (!saved) return [];
+
+      const parsed: unknown = JSON.parse(saved);
+
+      if (!Array.isArray(parsed)) return [];
+
+      return parsed.filter(
+        (item): item is ChatMessage =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof item.id === "string" &&
+          typeof item.text === "string" &&
+          (item.direction === "incoming" || item.direction === "outgoing") &&
+          typeof item.timestamp === "number",
+      );
+    } catch {
+      return [];
+    }
+  });
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch (error) {
+      console.error("Не удалось сохранить историю сообщений:", error);
+    }
+  }, [messages, storageKey]);
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView();
   }, [messages]);

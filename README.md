@@ -1,78 +1,95 @@
-# React + TypeScript + Vite
+# GREEN-API Messenger
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Минимальное веб-приложение для отправки и получения текстовых сообщений WhatsApp через GREEN-API.
 
-Currently, two official plugins are available:
+Проект разработан в рамках тестового задания на позицию Frontend React Developer. В качестве мессенджера используется WhatsApp, поскольку техническое задание допускает его использование вместо MAX.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Технологии
 
-## React Compiler
+- React
+- TypeScript
+- Vite
+- CSS
+- GREEN-API
+- LocalStorage
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+## Возможности
 
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
+- Подключение через `apiUrl`, `idInstance` и `apiTokenInstance`.
+- Проверка номера получателя через GREEN-API.
+- Создание чата с выбранным контактом.
+- Отправка текстовых сообщений.
+- Получение входящих сообщений через HTTP API (long polling).
+- Удаление обработанных уведомлений из очереди.
+- Отображение входящих и исходящих сообщений.
+- Локальное сохранение истории переписки.
+- Адаптивный интерфейс, вдохновлённый веб-версией MAX.
 
-## Expanding the ESLint configuration
+## Локальный запуск
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+**Требования:** Node.js 20+ и npm.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Клонируйте репозиторий:
+   git clone https://github.com/MokhammadRezaSoltani1998/green-api-test-project.git
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. Перейдите в папку проекта:
+   cd REPOSITORY
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+3. Установите зависимости:
+   npm install
 
-```
+4. Запустите приложение:
+   npm run dev
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+5. Откройте адрес, указанный Vite в терминале (обычно `http://localhost:5173`).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Настройка GREEN-API
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Для работы приложения необходим авторизованный WhatsApp-инстанс GREEN-API.
 
-```
+1. Зарегистрируйтесь на [GREEN-API](https://green-api.com/).
+2. Создайте WhatsApp-инстанс и авторизуйте его.
+3. Скопируйте `apiUrl`, `idInstance` и `apiTokenInstance` из личного кабинета.
+4. Откройте приложение и введите эти данные в форму подключения.
+5. Введите номер получателя в международном формате, например `79876543210`.
+6. Создайте чат и отправьте сообщение.
+
+Для получения входящих сообщений в настройках инстанса должны быть включены уведомления о входящих сообщениях.
+
+## Как работает получение сообщений
+
+Приложение использует GREEN-API HTTP API для последовательного получения уведомлений.
+
+После получения уведомления приложение проверяет его тип и принадлежность текущему чату. Подходящие текстовые сообщения отображаются в интерфейсе. Обработанное уведомление удаляется из очереди через `deleteNotification`.
+
+## Сохранение истории
+
+История переписки сохраняется в `localStorage` браузера отдельно для каждого чата и GREEN-API инстанса.
+
+После перезагрузки страницы историю можно восстановить, повторно подключившись к тому же инстансу и открыв тот же чат.
+
+История хранится локально и не синхронизируется между браузерами или устройствами. Данные авторизации GREEN-API в `localStorage` не сохраняются.
+
+## Ограничения
+
+- Поддерживаются только текстовые сообщения.
+- Не реализованы отправка файлов и групповые чаты.
+- История сохраняется только в текущем браузере.
+- Приложение не загружает полную историю переписки из WhatsApp.
+- При временной ошибке получения уведомлений может потребоваться повторно открыть чат.
+
+## Проверка проекта
+
+npm run lint
+npm run build
+
+## Полезные ссылки
+
+- [Документация GREEN-API](https://green-api.com/en/docs/)
+- [Отправка сообщений](https://green-api.com/en/docs/api/sending/SendMessage/)
+- [Получение уведомлений](https://green-api.com/en/docs/api/receiving/technology-http-api/)
+- [React](https://react.dev/)
+
+## Примечание
+
+Приложение создано в учебных целях как тестовое задание. Для работы необходим собственный авторизованный GREEN-API инстанс.
